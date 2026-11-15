@@ -1,0 +1,30 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ci-run-id:
+        description: Successful main-branch CI run containing release-bundle
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      ci-run-id: ${{ inputs.ci-run-id || format('{0}', github.event.workflow_run.id) }}
+    secrets: inherit
