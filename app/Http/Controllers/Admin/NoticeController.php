@@ -11,37 +11,39 @@ use Illuminate\View\View;
 
 class NoticeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = trim((string) $request->string('q'));
+
         return view('admin.notices.index', [
-            'notices' => Notice::query()->latest()->paginate(10),
+            'query' => $query,
+            'notices' => Notice::query()
+                ->search($query)
+                ->latest()
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         return view('admin.notices.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'category' => ['required', 'string', 'max:50'],
             'attachment' => ['nullable', 'file', 'max:4096'],
             'is_published' => ['nullable', 'boolean'],
+            'is_featured' => ['nullable', 'boolean'],
+            'pinned_until' => ['nullable', 'date'],
         ]);
 
         $validated['is_published'] = $request->boolean('is_published');
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         if ($request->hasFile('attachment')) {
             $validated['attachment_path'] = $request->file('attachment')->store('notices', 'public');
@@ -56,27 +58,25 @@ class NoticeController extends Controller
             ->with('status', 'Notice created.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Notice $notice): View
     {
         return view('admin.notices.edit', compact('notice'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Notice $notice): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'category' => ['required', 'string', 'max:50'],
             'attachment' => ['nullable', 'file', 'max:4096'],
             'is_published' => ['nullable', 'boolean'],
+            'is_featured' => ['nullable', 'boolean'],
+            'pinned_until' => ['nullable', 'date'],
         ]);
 
         $validated['is_published'] = $request->boolean('is_published');
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         if ($request->hasFile('attachment')) {
             if ($notice->attachment_path) {
@@ -95,9 +95,6 @@ class NoticeController extends Controller
             ->with('status', 'Notice updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Notice $notice): RedirectResponse
     {
         if ($notice->attachment_path) {

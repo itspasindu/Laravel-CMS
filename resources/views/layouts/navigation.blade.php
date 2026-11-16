@@ -15,14 +15,20 @@
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                         {{ __('Home') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('news.index')" :active="request()->routeIs('news.*')">
+                        {{ __('News') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('notices.index')" :active="request()->routeIs('notices.*')">
+                        {{ __('Notices') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     <x-nav-link :href="route('admin.news.index')" :active="request()->routeIs('admin.news.*')">
-                        {{ __('News') }}
+                        {{ __('Manage News') }}
                     </x-nav-link>
                     <x-nav-link :href="route('admin.notices.index')" :active="request()->routeIs('admin.notices.*')">
-                        {{ __('Notices') }}
+                        {{ __('Manage Notices') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -79,14 +85,20 @@
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                 {{ __('Home') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('news.index')" :active="request()->routeIs('news.*')">
+                {{ __('News') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('notices.index')" :active="request()->routeIs('notices.*')">
+                {{ __('Notices') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.news.index')" :active="request()->routeIs('admin.news.*')">
-                {{ __('News') }}
+                {{ __('Manage News') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.notices.index')" :active="request()->routeIs('admin.notices.*')">
-                {{ __('Notices') }}
+                {{ __('Manage Notices') }}
             </x-responsive-nav-link>
         </div>
 

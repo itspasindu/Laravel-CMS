@@ -25,5 +25,6 @@ class DashboardAccessTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Dashboard');
+        $response->assertSee('Published news');
     }
 }

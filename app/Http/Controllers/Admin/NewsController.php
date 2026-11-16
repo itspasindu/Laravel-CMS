@@ -11,35 +11,37 @@ use Illuminate\View\View;
 
 class NewsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $query = trim((string) $request->string('q'));
+
         return view('admin.news.index', [
-            'newsItems' => News::query()->latest()->paginate(10),
+            'query' => $query,
+            'newsItems' => News::query()
+                ->search($query)
+                ->latest()
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         return view('admin.news.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
             'body' => ['required', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
             'published_at' => ['nullable', 'date'],
+            'is_featured' => ['nullable', 'boolean'],
         ]);
+
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('news', 'public');
@@ -54,25 +56,23 @@ class NewsController extends Controller
             ->with('status', 'News item created.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(News $news): View
     {
         return view('admin.news.edit', compact('news'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, News $news): RedirectResponse
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'excerpt' => ['nullable', 'string', 'max:500'],
             'body' => ['required', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
             'published_at' => ['nullable', 'date'],
+            'is_featured' => ['nullable', 'boolean'],
         ]);
+
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         if ($request->hasFile('image')) {
             if ($news->image_path) {
@@ -91,9 +91,6 @@ class NewsController extends Controller
             ->with('status', 'News item updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(News $news): RedirectResponse
     {
         if ($news->image_path) {

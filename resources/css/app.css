@@ -1,3 +1,117 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --cms-ink: #10233f;
+        --cms-muted: #5b6b7c;
+        --cms-surface: #f3f7fb;
+        --cms-panel: #ffffff;
+        --cms-accent: #0f766e;
+        --cms-accent-soft: #ccfbf1;
+        --cms-line: #d7e2ec;
+    }
+
+    body {
+        color: var(--cms-ink);
+        background-color: var(--cms-surface);
+    }
+}
+
+@layer components {
+    .cms-shell {
+        min-height: 100vh;
+        background:
+            radial-gradient(1200px 500px at 10% -10%, rgba(15, 118, 110, 0.16), transparent 55%),
+            radial-gradient(900px 400px at 100% 0%, rgba(14, 165, 233, 0.12), transparent 50%),
+            linear-gradient(180deg, #eef5f8 0%, #f7fafc 42%, #eef3f7 100%);
+    }
+
+    .cms-grid-overlay {
+        background-image:
+            linear-gradient(rgba(16, 35, 63, 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 35, 63, 0.035) 1px, transparent 1px);
+        background-size: 28px 28px;
+    }
+
+    .cms-brand {
+        font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    .cms-display {
+        font-family: "Fraunces", ui-serif, Georgia, serif;
+        letter-spacing: -0.02em;
+    }
+
+    .cms-card {
+        @apply rounded-2xl border bg-white/90 shadow-sm backdrop-blur;
+        border-color: var(--cms-line);
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .cms-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(15, 118, 110, 0.35);
+        box-shadow: 0 14px 30px rgba(16, 35, 63, 0.08);
+    }
+
+    .cms-chip {
+        @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide;
+        background: var(--cms-accent-soft);
+        color: var(--cms-accent);
+    }
+
+    .cms-btn {
+        @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition;
+    }
+
+    .cms-btn-primary {
+        @apply cms-btn text-white;
+        background: var(--cms-ink);
+    }
+
+    .cms-btn-primary:hover {
+        background: #183456;
+    }
+
+    .cms-btn-accent {
+        @apply cms-btn text-white;
+        background: var(--cms-accent);
+    }
+
+    .cms-btn-accent:hover {
+        background: #0d9488;
+    }
+
+    .cms-input {
+        @apply w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition;
+        border-color: var(--cms-line);
+    }
+
+    .cms-input:focus {
+        border-color: rgba(15, 118, 110, 0.55);
+        box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+
+    .fade-up {
+        animation: fade-up 520ms ease both;
+    }
+
+    .fade-up-delay {
+        animation: fade-up 700ms ease both;
+        animation-delay: 90ms;
+    }
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
