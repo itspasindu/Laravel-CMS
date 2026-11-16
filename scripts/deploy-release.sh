@@ -105,10 +105,10 @@ chmod -R g+rwX "$root/shared/storage" 2>/dev/null || true
 cd "$release"
 php artisan package:discover --ansi
 php artisan storage:link
+php artisan migrate --force
+php artisan view:clear || true
 php artisan config:cache
 php artisan route:cache
-# Cache views on demand: shared compiled views must not be cleared mid-release.
-php artisan migrate --force
 ln -s "$release" "$root/current.next"
 mv -Tf "$root/current.next" "$root/current"
 switched=1

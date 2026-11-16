@@ -57,6 +57,20 @@ class Notice extends Model
         return 'slug';
     }
 
+    public function getRouteKey(): mixed
+    {
+        return filled($this->slug) ? $this->slug : $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null): ?static
+    {
+        $field ??= $this->getRouteKeyName();
+
+        return $this->where($field, $value)
+            ->orWhere($this->getKeyName(), $value)
+            ->first();
+    }
+
     public function isPinned(): bool
     {
         return $this->pinned_until !== null && $this->pinned_until->isFuture();
