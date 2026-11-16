@@ -22,6 +22,27 @@ if [[ ! -L "$root/current" && -e "$root/current" ]]; then
   exit 1
 fi
 switched=0
+
+php_fpm_unit() {
+  local unit
+  for unit in php8.5-fpm php8.4-fpm php8.3-fpm php-fpm; do
+    if systemctl list-unit-files "${unit}.service" 2>/dev/null | grep -q "${unit}.service"; then
+      printf '%s\n' "$unit"
+      return 0
+    fi
+  done
+  return 1
+}
+
+reload_php_fpm() {
+  local unit
+  unit=$(php_fpm_unit) || {
+    echo 'No php*-fpm systemd unit found to reload' >&2
+    return 1
+  }
+  sudo -n systemctl reload "$unit"
+}
+
 recover() {
   status=$?
   trap - EXIT
@@ -29,7 +50,7 @@ recover() {
     if [[ -n "$previous" && -d "$previous" ]]; then
       ln -s "$previous" "$root/current.recovery"
       mv -Tf "$root/current.recovery" "$root/current"
-      sudo -n systemctl reload php8.3-fpm || true
+      reload_php_fpm || true
       (cd "$previous" && php artisan queue:restart) || true
       echo "Restored previous application: $previous" >&2
     else
@@ -64,7 +85,7 @@ php artisan migrate --force
 ln -s "$release" "$root/current.next"
 mv -Tf "$root/current.next" "$root/current"
 switched=1
-sudo -n systemctl reload php8.3-fpm
+reload_php_fpm
 php artisan queue:restart
 healthy=0
 for attempt in $(seq 1 12); do

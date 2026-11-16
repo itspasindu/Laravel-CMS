@@ -59,13 +59,16 @@ sudo chmod 640 /opt/dummy-cms/shared/.env
 
 Reconnect the deploy account after changing groups. Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, a permanent `APP_KEY`, MySQL credentials, and the desired session/cache/queue settings in that shared `.env`. Generate `APP_KEY` once with `php -r 'echo "base64:".base64_encode(random_bytes(32)).PHP_EOL;'`. Never rotate it on each deployment. If using SQLite instead, use an absolute database path under `shared`, not inside a release.
 
-Using `sudo visudo`, allow only the needed PHP service operation (confirm the `systemctl` path on your server):
+Using `sudo visudo`, allow only the needed PHP service operation (confirm the unit name on your server with `systemctl list-units 'php*-fpm*'`):
 
 ```sudoers
+# Ubuntu 24.04:
 deploy ALL=(root) NOPASSWD: /usr/bin/systemctl reload php8.3-fpm
+# Ubuntu 26.04:
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl reload php8.5-fpm
 ```
 
-Configure Nginx with document root `/opt/dummy-cms/current/public`, PHP-FPM socket `/run/php/php8.3-fpm.sock`, Laravel's `try_files $uri $uri/ /index.php?$query_string`, and `fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name`. Use `$realpath_root` to avoid serving stale PHP code across symlink switches. Deny dotfiles, except `.well-known`, and configure TLS for your hostname. Check `nginx -t` and reload Nginx. The site will not serve until the first successful deployment.
+Configure Nginx with document root `/opt/dummy-cms/current/public`, PHP-FPM socket `/run/php/php8.5-fpm.sock` (or `php8.3-fpm.sock` on 24.04), Laravel's `try_files $uri $uri/ /index.php?$query_string`, and `fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name`. Use `$realpath_root` to avoid serving stale PHP code across symlink switches. Deny dotfiles, except `.well-known`, and configure TLS for your hostname. Check `nginx -t` and reload Nginx. The site will not serve until the first successful deployment.
 
 If queue jobs are used, run `php /opt/dummy-cms/current/artisan queue:work --sleep=3 --tries=3` under Supervisor/systemd with automatic restart, as the deploy account, with `WorkingDirectory=/opt/dummy-cms/current`. The pipeline calls `queue:restart`; the process manager must start a new worker. Add the Laravel scheduler cron only if scheduled tasks are needed.
 
