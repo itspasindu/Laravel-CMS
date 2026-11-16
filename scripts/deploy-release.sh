@@ -108,15 +108,21 @@ mv -Tf "$root/current.next" "$root/current"
 switched=1
 reload_php_fpm
 php artisan queue:restart
+smoke_script="$release/scripts/smoke-check.sh"
 healthy=0
 for attempt in $(seq 1 12); do
-  if curl --fail --location --silent --show-error --max-time 10 "$health_url" >/dev/null; then
+  if [[ -x "$smoke_script" ]] || [[ -f "$smoke_script" ]]; then
+    if bash "$smoke_script" "$health_url"; then
+      healthy=1
+      break
+    fi
+  elif curl --fail --location --silent --show-error --max-time 10 "$health_url" >/dev/null; then
     healthy=1
     break
   fi
   sleep 5
 done
-[[ "$healthy" == 1 ]] || { echo 'Health check failed' >&2; exit 1; }
+[[ "$healthy" == 1 ]] || { echo 'Smoke / health checks failed' >&2; exit 1; }
 if [[ -n "$previous" && -d "$previous" ]]; then
   ln -s "$previous" "$root/previous.next"
   mv -Tf "$root/previous.next" "$root/previous"

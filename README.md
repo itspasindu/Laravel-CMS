@@ -1,6 +1,6 @@
 # Dummy CMS
 
-Lightweight Laravel 12 CMS scaffold for exercising real build, migrate, auth, storage, and test steps. GitHub Actions workflows test, sign, and deploy releases to an Ubuntu staging server over SSH. See [CI/CD setup](docs/CI-CD.md) for the required GitHub settings and server preparation.
+Lightweight Laravel 12 CMS scaffold for exercising real build, migrate, auth, storage, and test steps. GitHub Actions workflows **test, scan, package, deploy, and smoke-verify** releases to an Ubuntu staging server over SSH (**no Docker**). See [CI/CD setup](docs/CI-CD.md) for the required GitHub settings and server preparation.
 
 ## Stack
 

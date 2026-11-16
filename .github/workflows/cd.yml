@@ -28,3 +28,40 @@ jobs:
     with:
       ci-run-id: ${{ inputs.ci-run-id || format('{0}', github.event.workflow_run.id) }}
     secrets: inherit
+  report-failure:
+    name: Open issue on CD failure
+    needs: [deploy]
+    if: always() && needs.deploy.result == 'failure'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const title = `CD failed (run ${context.runId})`;
+            const body = [
+              'Automated CD failure report.',
+              '',
+              `- Repository: ${context.repo.owner}/${context.repo.repo}`,
+              `- Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Check deploy logs, smoke checks, permissions, and Nginx/PHP-FPM on staging.',
+            ].join('\n');
+            try {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['cd-failure'],
+              });
+            } catch (error) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: `${body}\n\n(label cd-failure missing)`,
+              });
+            }
