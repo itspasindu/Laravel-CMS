@@ -85,10 +85,13 @@ test -f "$release/public/build/manifest.json"
 test ! -e "$release/.env"
 test ! -e "$release/storage"
 # Nginx/PHP-FPM run as www-data and must be able to traverse the release tree.
-chgrp -R www-data "$release"
+# chgrp may fail in CI mocks or locked-down hosts; never abort the deploy for that.
+if getent group www-data >/dev/null 2>&1; then
+  chgrp -R www-data "$release" 2>/dev/null || true
+fi
 find "$release" -type d -exec chmod 2755 {} +
 find "$release" -type f -exec chmod 0644 {} +
-chmod -R g+rwX "$root" "$root/releases" "$root/shared" || true
+chmod -R g+rwX "$root" "$root/releases" "$root/shared" 2>/dev/null || true
 mkdir -p "$root/shared/storage/app/public" "$root/shared/storage/app/private" \
   "$root/shared/storage/framework/cache/data" "$root/shared/storage/framework/sessions" \
   "$root/shared/storage/framework/views" "$root/shared/storage/logs"
