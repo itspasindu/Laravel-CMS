@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\NoticeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Notice extends Model
 {
-    /** @use HasFactory<\Database\Factories\NoticeFactory> */
+    /** @use HasFactory<NoticeFactory> */
     use HasFactory;
 
     /**
