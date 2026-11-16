@@ -1,101 +1,79 @@
 # Laravel CI/CD
 
-Adapted from [itspasindu/reusable-cicd-pipeline](https://github.com/itspasindu/reusable-cicd-pipeline/tree/bc8b78a25bb59fbcc167c70144a2a63c3158e2df/.github).
-This project uses PHP 8.3 on Ubuntu 24.04, Node 22 for asset builds, and an Ubuntu SSH staging target.
+Adapted from the administrator pipeline overview (test → scan → package → deploy → verify) and [itspasindu/reusable-cicd-pipeline](https://github.com/itspasindu/reusable-cicd-pipeline).  
+This project uses **PHP 8.3 on GitHub-hosted Ubuntu 24.04**, Node 22 for asset builds, and an Ubuntu SSH staging target. **No Docker** is required for application packaging or staging runtime.
 
 ## Pipeline
 
-1. PRs and pushes to `main` run Pint, PHPUnit with SQLite, release trust and deployment recovery tests, a Vite build, Composer production dependency audit, and a full npm audit (high/critical findings fail CI).
-2. Successful main runs package the tested source, production Composer dependencies, built assets, and release metadata. Only that archive is signed in the `release-signing` environment. PRs have no signing or deployment credentials.
-3. CD runs after successful CI, or manually with a successful main CI run ID. It verifies the source repository, event, branch, workflow, result, signature, commit, and run ID before sending the archive over SSH.
-4. Deployment runs migrations, switches the `current` symlink, reloads PHP-FPM, restarts queue workers, and checks the configured HTTP URL. Failure after the switch restores the previous application; failure before the switch leaves it serving. First-deploy failure removes the failed `current` link.
+1. **Test** — Pint, PHPUnit (SQLite), release-trust/deployment recovery scripts, Vite build, Playwright smoke (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari) against `php artisan serve`.
+2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), CodeQL (JavaScript), Trivy filesystem scan (HIGH/CRITICAL). Composer production audit runs on the tested lockfile.
+3. **Package** — On `main` only: production Composer deps, built assets, SBOM inventory, `CHECKSUMS.sha256`, `release.json` version `YYYY.MM.N.A+sha`, then RSA signature in `release-signing`.
+4. **Deploy** — CD verifies the CI run and signature, copies the archive over SSH (optional Tailscale), switches `current`, migrates, reloads PHP-FPM, restarts queues.
+5. **Verify** — Smoke checks `/health`, `/up`, `/`, `/login` from the server. Failure after switch restores `previous` (files only; migrations are not reversed).
 
-Release artifacts expire after 30 days. Manual CD redeploys an existing verified artifact; it does not rebuild it. Deployments are serialized in Actions and with a server-side lock. A manually selected older run deliberately redeploys that version.
+Pull requests stop after test + scan. Only `main` is packaged and deployed. Failed CI/CD runs open a GitHub issue with a link to the run.
 
-The reference's React/PostgreSQL tests, pipeline-monitor API, wiki publishing, issue automation, and developer-fix workflow are not used by this Laravel application. Results appear in Actions logs, the test report artifact, and the CD job summary. Security gates here cover dependencies; there is no PHP SAST or secret-history scanner in this version.
+Release artifacts expire after 30 days. Manual CD redeploys an existing verified artifact; it does not rebuild it. Deployments are serialized in Actions and with a server-side lock.
+
+## What was intentionally not ported from the React overview
+
+| Overview item | This Laravel pipeline |
+| --- | --- |
+| Docker / container runtime | Not used |
+| PostgreSQL password at deploy | App uses shared `/opt/dummy-cms/shared/.env` (MySQL/SQLite) |
+| Wiki publishing (`WIKI_TOKEN`) | Optional later; not required |
+| Pipeline-monitor API | Not used |
 
 ## GitHub configuration
 
-Create environments named `release-signing` and `staging`. Restrict both to `main`; add reviewers if desired. Protect `main` and require the test and security checks. Keep signing credentials out of PR jobs.
+Create environments named `release-signing` and `staging`. Restrict both to `main`. Protect `main` and require the test and security checks.
 
 | Location | Name | Value |
 | --- | --- | --- |
-| `release-signing` environment secret | `RELEASE_SIGNING_PRIVATE_KEY` | RSA private key, PEM format |
-| Repository variable | `RELEASE_SIGNING_PUBLIC_KEY` | Matching public key, PEM format, used in signing and staging |
-| `staging` environment secret | `SSH_PRIVATE_KEY` | Dedicated server deployment key |
-| `staging` environment secret | `STAGING_HOST` | Server hostname or IPv4 address, without protocol/port |
-| `staging` environment secret | `STAGING_USER` | Ubuntu deploy account, e.g. `deploy` |
-| `staging` environment secret | `STAGING_SSH_KNOWN_HOSTS` | Trusted SSH host-key entry, verified independently |
-| `staging` environment secret (optional) | `TAILSCALE_AUTHKEY` | Needed only for a private Tailscale host |
-| `staging` environment variable (optional) | `STAGING_DEPLOY_ROOT` | Absolute path; default `/opt/dummy-cms` |
-| `staging` environment variable | `STAGING_HEALTH_URL` | Full URL reachable **from the server**, ideally `https://cms.example.com/` to exercise database-backed rendering |
+| `release-signing` environment secret | `RELEASE_SIGNING_PRIVATE_KEY` | RSA private key, PEM |
+| Repository variable | `RELEASE_SIGNING_PUBLIC_KEY` | Matching public key, PEM |
+| `staging` environment secret | `SSH_PRIVATE_KEY` | Deploy private key |
+| `staging` environment secret | `STAGING_HOST` | Hostname or IP (no protocol) |
+| `staging` environment secret | `STAGING_USER` | e.g. `deploy` |
+| `staging` environment secret | `STAGING_SSH_KNOWN_HOSTS` | `ssh-keyscan` / host key line |
+| `staging` environment secret (optional) | `TAILSCALE_AUTHKEY` | Private Tailscale access |
+| `staging` environment variable | `STAGING_DEPLOY_ROOT` | Default `/opt/dummy-cms` |
+| `staging` environment variable | `STAGING_HEALTH_URL` | URL reachable **from the server**, e.g. `http://127.0.0.1/health` |
 
-SSH uses port 22. The deploy root must contain only letters, numbers, `/`, `_`, and `-`. No GitHub PAT is required. The built-in token reads source and artifacts.
-
-Generate signing keys on a trusted machine, outside the repository:
-
-```bash
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out release-private.pem
-openssl pkey -in release-private.pem -pubout -out release-public.pem
-```
-
-Store the private key only in the signing environment secret. Key rotation requires keeping the relevant public key available to verify older artifacts.
+Optional labels: `ci-failure`, `cd-failure` (created automatically when possible).
 
 ## Ubuntu server preparation
 
-Install Nginx, PHP 8.3 CLI/FPM with `mbstring`, `xml`, `curl`, `intl`, `mysql`, `sqlite3`, `gd`, `zip`, and `bcmath`, plus `curl`, `tar`, and `util-linux` (for `flock`). Configure MySQL separately and create the CMS database and application account. Composer and Node are not required on the server because dependencies and assets are bundled.
-
-Example paths below assume a pre-created `deploy` user with SSH access:
+Install Nginx, PHP 8.3/8.5 CLI+FPM (+ extensions), MySQL, `curl`, `tar`, `util-linux`. Composer and Node are **not** required on the server.
 
 ```bash
 sudo usermod -aG www-data deploy
-sudo install -d -o deploy -g www-data -m 2775 /opt/dummy-cms
-sudo install -d -o deploy -g www-data -m 2775 /opt/dummy-cms/shared
-sudo install -d -o deploy -g www-data -m 2775 /opt/dummy-cms/shared/storage
-# Copy this project's .env.example to /opt/dummy-cms/shared/.env, then edit it.
+sudo install -d -o deploy -g www-data -m 2775 /opt/dummy-cms /opt/dummy-cms/shared /opt/dummy-cms/shared/storage
+# Create /opt/dummy-cms/shared/.env from .env.example (production values + permanent APP_KEY)
 sudo chown deploy:www-data /opt/dummy-cms/shared/.env
 sudo chmod 640 /opt/dummy-cms/shared/.env
 ```
 
-Reconnect the deploy account after changing groups. Set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, a permanent `APP_KEY`, MySQL credentials, and the desired session/cache/queue settings in that shared `.env`. Generate `APP_KEY` once with `php -r 'echo "base64:".base64_encode(random_bytes(32)).PHP_EOL;'`. Never rotate it on each deployment. If using SQLite instead, use an absolute database path under `shared`, not inside a release.
-
-Using `sudo visudo`, allow only the needed PHP service operation (confirm the unit name on your server with `systemctl list-units 'php*-fpm*'`):
+Passwordless reload (match your unit):
 
 ```sudoers
-# Ubuntu 24.04:
-deploy ALL=(root) NOPASSWD: /usr/bin/systemctl reload php8.3-fpm
-# Ubuntu 26.04:
 deploy ALL=(root) NOPASSWD: /usr/bin/systemctl reload php8.5-fpm
 ```
 
-Configure Nginx with document root `/opt/dummy-cms/current/public`, PHP-FPM socket `/run/php/php8.5-fpm.sock` (or `php8.3-fpm.sock` on 24.04), Laravel's `try_files $uri $uri/ /index.php?$query_string`, and `fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name`. Use `$realpath_root` to avoid serving stale PHP code across symlink switches. Deny dotfiles, except `.well-known`, and configure TLS for your hostname. Check `nginx -t` and reload Nginx. The site will not serve until the first successful deployment.
+Nginx `root` must be `/opt/dummy-cms/current/public` with `$realpath_root` for PHP. Ensure `www-data` can traverse `/opt/dummy-cms` (group `www-data`, directories `2775`).
 
-If queue jobs are used, run `php /opt/dummy-cms/current/artisan queue:work --sleep=3 --tries=3` under Supervisor/systemd with automatic restart, as the deploy account, with `WorkingDirectory=/opt/dummy-cms/current`. The pipeline calls `queue:restart`; the process manager must start a new worker. Add the Laravel scheduler cron only if scheduled tasks are needed.
-
-The shared storage directory inherits group `www-data`; both PHP-FPM and the deploy account need write access. Preserve the setgid bit on shared directories. Keep server backups of the database, `.env`, and uploaded files.
-
-## First run and rollback
-
-Push these files to `main` after configuring environments. CI executes first; signing and CD follow only if all gates succeed. No workflows or secrets are created remotely merely by editing this checkout.
-
-The repository currently has **no committed `composer.lock`**. CI therefore resolves it, tests those versions, and packages that same generated lock and production dependencies. Commit a reviewed lock from a working PHP environment for repeatable resolution across runs. Audits may expose existing dependency vulnerabilities; resolve them rather than bypassing the checks. This pipeline does not upgrade application dependencies automatically.
-
-Laravel 11 is past security support and Composer 2.9+ refuses those releases. Keep `laravel/framework` on a patched `^12.71` (or newer) constraint so installs and audits can succeed.
-
-Application rollback on the server:
+## Rollback
 
 ```bash
-bash /opt/dummy-cms/current/scripts/rollback-release.sh /opt/dummy-cms https://cms.example.com/
+bash /opt/dummy-cms/current/scripts/rollback-release.sh /opt/dummy-cms http://127.0.0.1/health
 ```
 
-Rollback restores the previous application, **not database changes**. Use backward-compatible migrations and back up data before schema changes. No seeders run during deployment. Old release directories are retained for operator-managed cleanup; keep `current` and `previous` targets.
+Restores the previous application files only.
 
 ## Validation
 
 ```bash
 node --test scripts/tests/release-trust.test.mjs
 bash scripts/tests/deployment.test.sh
-actionlint
+bash scripts/smoke-check.sh http://127.0.0.1/health
 ```
-
-Deployment tests mock PHP, HTTP, service reload, and sleep, and cover success, migration failure, health failure, and first-deploy failure. Git Bash additionally mocks missing `flock`; Ubuntu CI uses real `flock`. These tests do not substitute for a first staging deployment and server health check.
