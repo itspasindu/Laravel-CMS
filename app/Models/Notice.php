@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Database\Factories\NoticeFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Notice extends Model
 {
@@ -16,9 +18,13 @@ class Notice extends Model
      */
     protected $fillable = [
         'title',
+        'slug',
         'body',
+        'category',
         'attachment_path',
         'is_published',
+        'is_featured',
+        'pinned_until',
     ];
 
     /**
@@ -28,6 +34,83 @@ class Notice extends Model
     {
         return [
             'is_published' => 'boolean',
+            'is_featured' => 'boolean',
+            'pinned_until' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Notice $notice): void {
+            if (blank($notice->slug) && filled($notice->title)) {
+                $notice->slug = static::uniqueSlug($notice->title, $notice->id);
+            }
+
+            if (blank($notice->category)) {
+                $notice->category = 'general';
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function isPinned(): bool
+    {
+        return $this->pinned_until !== null && $this->pinned_until->isFuture();
+    }
+
+    /**
+     * @param  Builder<Notice>  $query
+     * @return Builder<Notice>
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true);
+    }
+
+    /**
+     * @param  Builder<Notice>  $query
+     * @return Builder<Notice>
+     */
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
+    }
+
+    /**
+     * @param  Builder<Notice>  $query
+     * @return Builder<Notice>
+     */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if (blank($term)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $builder) use ($term): void {
+            $builder->where('title', 'like', "%{$term}%")
+                ->orWhere('body', 'like', "%{$term}%")
+                ->orWhere('category', 'like', "%{$term}%");
+        });
+    }
+
+    public static function uniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title) ?: 'notice';
+        $slug = $base;
+        $suffix = 1;
+
+        while (static::query()
+            ->when($ignoreId, fn (Builder $query) => $query->whereKeyNot($ignoreId))
+            ->where('slug', $slug)
+            ->exists()) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

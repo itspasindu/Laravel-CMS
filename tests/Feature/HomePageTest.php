@@ -21,5 +21,18 @@ class HomePageTest extends TestCase
         $response->assertOk();
         $response->assertSee('Campus News Item');
         $response->assertSee('Campus Notice Item');
+        $response->assertSee('Search news and notices');
+    }
+
+    public function test_home_page_can_search_content(): void
+    {
+        News::factory()->create(['title' => 'Robotics showcase']);
+        News::factory()->create(['title' => 'Unrelated story']);
+
+        $response = $this->get(route('home', ['q' => 'Robotics']));
+
+        $response->assertOk();
+        $response->assertSee('Robotics showcase');
+        $response->assertDontSee('Unrelated story');
     }
 }
