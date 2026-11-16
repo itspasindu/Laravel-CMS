@@ -69,4 +69,5 @@ jobs:
         env:
           RESULT: ${{ job.status }}
           SOURCE_RUN: ${{ inputs.ci-run-id }}
-        run: printf '### Staging deployment\nResult: %s\nSource CI run: %s\n' "$RESULT" "$SOURCE_RUN" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          printf '### Staging deployment\nResult: %s\nSource CI run: %s\n' "$RESULT" "$SOURCE_RUN" >> "$GITHUB_STEP_SUMMARY"
