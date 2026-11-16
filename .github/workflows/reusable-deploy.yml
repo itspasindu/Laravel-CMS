@@ -18,11 +18,28 @@ jobs:
     environment: staging
     env:
       DEPLOY_ROOT: ${{ vars.STAGING_DEPLOY_ROOT || '/opt/dummy-cms' }}
-      HEALTH_URL: ${{ vars.STAGING_HEALTH_URL }}
+      # Prefer environment variable; accept secret fallback if set in the wrong place.
+      HEALTH_URL: ${{ vars.STAGING_HEALTH_URL || secrets.STAGING_HEALTH_URL }}
       HOST: ${{ secrets.STAGING_HOST }}
       DEPLOY_USER: ${{ secrets.STAGING_USER }}
       TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
     steps:
+      - name: Check deploy configuration
+        run: |
+          set -euo pipefail
+          if [[ -z "${HEALTH_URL:-}" ]]; then
+            echo 'STAGING_HEALTH_URL is empty.'
+            echo 'Add it under Settings → Environments → staging → Environment variables'
+            echo 'Name: STAGING_HEALTH_URL'
+            echo 'Value example: http://100.81.116.121/'
+            echo 'It must be a Variable (not a Secret), and must start with http:// or https://'
+            exit 1
+          fi
+          if [[ ! "$HEALTH_URL" =~ ^https?:// ]]; then
+            echo 'STAGING_HEALTH_URL must start with http:// or https://'
+            exit 1
+          fi
+          echo 'STAGING_HEALTH_URL is present and looks like a URL'
       # Always use trusted deployment code from main, never a PR artifact.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

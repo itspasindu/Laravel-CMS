@@ -3,7 +3,10 @@ set -euo pipefail
 [[ "$HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo 'Invalid STAGING_HOST'; exit 1; }
 [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo 'Invalid STAGING_USER'; exit 1; }
 [[ "$DEPLOY_ROOT" =~ ^/[-a-zA-Z0-9_/]+$ && "$DEPLOY_ROOT" != / ]] || exit 1
-[[ "$HEALTH_URL" =~ ^https?:// ]] || { echo 'Set STAGING_HEALTH_URL'; exit 1; }
+if [[ -z "${HEALTH_URL:-}" || ! "$HEALTH_URL" =~ ^https?:// ]]; then
+  echo 'Set STAGING_HEALTH_URL as a staging Environment variable, e.g. http://YOUR_TAILSCALE_IP/'
+  exit 1
+fi
 target="${DEPLOY_USER}@${HOST}"
 ssh_options=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
 release_id="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
