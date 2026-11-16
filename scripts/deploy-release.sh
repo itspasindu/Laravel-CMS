@@ -84,6 +84,11 @@ test -f "$release/vendor/autoload.php"
 test -f "$release/public/build/manifest.json"
 test ! -e "$release/.env"
 test ! -e "$release/storage"
+# Nginx/PHP-FPM run as www-data and must be able to traverse the release tree.
+chgrp -R www-data "$release"
+find "$release" -type d -exec chmod 2755 {} +
+find "$release" -type f -exec chmod 0644 {} +
+chmod -R g+rwX "$root" "$root/releases" "$root/shared" || true
 mkdir -p "$root/shared/storage/app/public" "$root/shared/storage/app/private" \
   "$root/shared/storage/framework/cache/data" "$root/shared/storage/framework/sessions" \
   "$root/shared/storage/framework/views" "$root/shared/storage/logs"
