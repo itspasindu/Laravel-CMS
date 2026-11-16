@@ -1,10 +1,10 @@
 # Dummy CMS
 
-Lightweight Laravel 11 CMS scaffold for exercising real build, migrate, auth, storage, and test steps. GitHub Actions workflows test, sign, and deploy releases to an Ubuntu staging server over SSH. See [CI/CD setup](docs/CI-CD.md) for the required GitHub settings and server preparation.
+Lightweight Laravel 12 CMS scaffold for exercising real build, migrate, auth, storage, and test steps. GitHub Actions workflows test, sign, and deploy releases to an Ubuntu staging server over SSH. See [CI/CD setup](docs/CI-CD.md) for the required GitHub settings and server preparation.
 
 ## Stack
 
-- PHP ^8.2, Laravel ^11.31, Laravel Breeze (Blade + Alpine + Tailwind)
+- PHP ^8.2, Laravel ^12.71, Laravel Breeze (Blade + Alpine + Tailwind)
 - Vite ^6, Tailwind CSS ^3.1, Alpine.js, Axios
 - MySQL primary (`DB_CONNECTION=mysql`); SQLite fallback documented in `.env.example`
 - Database drivers for session, cache, and queue

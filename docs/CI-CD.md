@@ -77,6 +77,8 @@ Push these files to `main` after configuring environments. CI executes first; si
 
 The repository currently has **no committed `composer.lock`**. CI therefore resolves it, tests those versions, and packages that same generated lock and production dependencies. Commit a reviewed lock from a working PHP environment for repeatable resolution across runs. Audits may expose existing dependency vulnerabilities; resolve them rather than bypassing the checks. This pipeline does not upgrade application dependencies automatically.
 
+Laravel 11 is past security support and Composer 2.9+ refuses those releases. Keep `laravel/framework` on a patched `^12.71` (or newer) constraint so installs and audits can succeed.
+
 Application rollback on the server:
 
 ```bash
