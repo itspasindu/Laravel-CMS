@@ -55,6 +55,20 @@ class News extends Model
         return 'slug';
     }
 
+    public function getRouteKey(): mixed
+    {
+        return filled($this->slug) ? $this->slug : $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null): ?static
+    {
+        $field ??= $this->getRouteKeyName();
+
+        return $this->where($field, $value)
+            ->orWhere($this->getKeyName(), $value)
+            ->first();
+    }
+
     /**
      * @param  Builder<News>  $query
      * @return Builder<News>
