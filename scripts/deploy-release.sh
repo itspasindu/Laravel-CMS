@@ -24,12 +24,24 @@ fi
 switched=0
 
 php_fpm_unit() {
-  local unit
+  local unit sock
+  # Optional override from the server environment / deploy wrapper.
+  if [[ -n "${PHP_FPM_SERVICE:-}" ]]; then
+    printf '%s\n' "${PHP_FPM_SERVICE%.service}"
+    return 0
+  fi
   for unit in php8.5-fpm php8.4-fpm php8.3-fpm php-fpm; do
-    if systemctl list-unit-files "${unit}.service" 2>/dev/null | grep -q "${unit}.service"; then
+    if [[ -f "/usr/lib/systemd/system/${unit}.service" || -f "/lib/systemd/system/${unit}.service" ]]; then
       printf '%s\n' "$unit"
       return 0
     fi
+  done
+  # Fallback: infer from the running FPM socket created by the package.
+  for sock in /run/php/php*-fpm.sock; do
+    [[ -S "$sock" ]] || continue
+    unit=$(basename "$sock" .sock)
+    printf '%s\n' "$unit"
+    return 0
   done
   return 1
 }
@@ -38,8 +50,12 @@ reload_php_fpm() {
   local unit
   unit=$(php_fpm_unit) || {
     echo 'No php*-fpm systemd unit found to reload' >&2
+    echo 'Checked unit files under /usr/lib/systemd/system and /lib/systemd/system,' >&2
+    echo 'and sockets under /run/php. Set PHP_FPM_SERVICE=php8.5-fpm if needed.' >&2
+    ls -l /run/php 2>/dev/null || true
     return 1
   }
+  echo "Reloading ${unit}"
   sudo -n systemctl reload "$unit"
 }
 
