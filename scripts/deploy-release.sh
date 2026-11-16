@@ -89,16 +89,19 @@ test ! -e "$release/storage"
 if getent group www-data >/dev/null 2>&1; then
   chgrp -R www-data "$release" 2>/dev/null || true
 fi
-find "$release" -type d -exec chmod 2755 {} +
-find "$release" -type f -exec chmod 0644 {} +
+find "$release" -type d -exec chmod 2755 {} + 2>/dev/null || true
+find "$release" -type f -exec chmod 0644 {} + 2>/dev/null || true
 chmod -R g+rwX "$root" "$root/releases" "$root/shared" 2>/dev/null || true
 mkdir -p "$root/shared/storage/app/public" "$root/shared/storage/app/private" \
   "$root/shared/storage/framework/cache/data" "$root/shared/storage/framework/sessions" \
   "$root/shared/storage/framework/views" "$root/shared/storage/logs"
+# Compiled views are often owned by www-data; clear what we can, never fail the deploy.
+find "$root/shared/storage/framework/views" -type f -name '*.php' -delete 2>/dev/null || true
 ln -s "$root/shared/.env" "$release/.env"
 ln -s "$root/shared/storage" "$release/storage"
 mkdir -p "$release/bootstrap/cache"
-chmod -R g+rwX "$release/bootstrap/cache" "$root/shared/storage"
+chmod -R g+rwX "$release/bootstrap/cache" 2>/dev/null || true
+chmod -R g+rwX "$root/shared/storage" 2>/dev/null || true
 cd "$release"
 php artisan package:discover --ansi
 php artisan storage:link
