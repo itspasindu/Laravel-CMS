@@ -1,0 +1,71 @@
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Colombo
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - php
+    groups:
+      laravel-framework:
+        patterns:
+          - laravel/*
+      php-dev-tools:
+        patterns:
+          - larastan/*
+          - phpstan/*
+          - phpunit/*
+          - laravel/pint
+          - laravel/breeze
+          - laravel/pail
+          - laravel/sail
+          - nunomaduro/*
+          - fakerphp/*
+          - mockery/*
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Colombo
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - javascript
+    groups:
+      frontend-build:
+        patterns:
+          - vite
+          - "@vitejs/*"
+          - laravel-vite-plugin
+          - tailwindcss
+          - "@tailwindcss/*"
+          - axios
+          - alpinejs
+          - concurrently
+      playwright:
+        patterns:
+          - "@playwright/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Colombo
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      github-actions:
+        patterns:
+          - "*"

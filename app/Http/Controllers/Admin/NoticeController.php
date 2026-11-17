@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -45,8 +46,9 @@ class NoticeController extends Controller
         $validated['is_published'] = $request->boolean('is_published');
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        if ($request->hasFile('attachment')) {
-            $validated['attachment_path'] = $request->file('attachment')->store('notices', 'public');
+        $attachment = $request->file('attachment');
+        if ($attachment instanceof UploadedFile) {
+            $validated['attachment_path'] = $attachment->store('notices', 'public');
         }
 
         unset($validated['attachment']);
@@ -78,12 +80,13 @@ class NoticeController extends Controller
         $validated['is_published'] = $request->boolean('is_published');
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        if ($request->hasFile('attachment')) {
+        $attachment = $request->file('attachment');
+        if ($attachment instanceof UploadedFile) {
             if ($notice->attachment_path) {
                 Storage::disk('public')->delete($notice->attachment_path);
             }
 
-            $validated['attachment_path'] = $request->file('attachment')->store('notices', 'public');
+            $validated['attachment_path'] = $attachment->store('notices', 'public');
         }
 
         unset($validated['attachment']);

@@ -6,12 +6,14 @@ This project uses **PHP 8.3 on GitHub-hosted Ubuntu 24.04**, Node 22 for asset b
 ## Pipeline
 
 1. **Test** — Pint, PHPUnit (SQLite), release-trust/deployment recovery scripts, Vite build, Playwright smoke (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari) against `php artisan serve`.
-2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), CodeQL (JavaScript), Trivy filesystem scan (HIGH/CRITICAL). Composer production audit runs on the tested lockfile.
+2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), PHPStan/Larastan (level 5), CodeQL (JavaScript + PHP), Trivy filesystem scan (HIGH/CRITICAL).
 3. **Package** — On `main` only: production Composer deps, built assets, SBOM inventory, `CHECKSUMS.sha256`, `release.json` version `YYYY.MM.N.A+sha`, then RSA signature in `release-signing`.
 4. **Deploy** — CD verifies the CI run and signature, copies the archive over SSH (optional Tailscale), switches `current`, migrates, reloads PHP-FPM, restarts queues.
 5. **Verify** — Smoke checks `/health`, `/up`, `/`, `/login` from the server. Failure after switch restores `previous` (files only; migrations are not reversed).
 
 Pull requests stop after test + scan. Only `main` is packaged and deployed. Failed CI/CD runs open a GitHub issue with a link to the run.
+
+Dependabot opens weekly grouped PRs for Composer, npm, and GitHub Actions (see `.github/dependabot.yml`).
 
 Release artifacts expire after 30 days. Manual CD redeploys an existing verified artifact; it does not rebuild it. Deployments are serialized in Actions and with a server-side lock.
 
@@ -41,6 +43,32 @@ Create environments named `release-signing` and `staging`. Restrict both to `mai
 | `staging` environment variable | `STAGING_HEALTH_URL` | URL reachable **from the server**, e.g. `http://127.0.0.1/health` |
 
 Optional labels: `ci-failure`, `cd-failure` (created automatically when possible).
+
+### Required checks and environment reviewers
+
+After CI has run once on `main`, apply quality gates (branch protection + environment reviewers):
+
+```bash
+bash scripts/configure-github-quality-gates.sh
+# or: REVIEWER_LOGIN=your-github-login bash scripts/configure-github-quality-gates.sh
+```
+
+That script:
+
+- Protects `main` with required status checks `test` and `security`, 1 approving review, linear history, conversation resolution (`enforce_admins` off so a solo maintainer can still merge)
+- Adds you as a required reviewer on `staging` and `release-signing` (deployments wait for approval)
+- Keeps deployment branch policy limited to protected branches
+
+If a PR shows checks as pending forever, open **Settings → Branches → main** and select the exact check names GitHub reports (often `CI / test` and `CI / security`).
+
+### Local PHP static analysis
+
+```bash
+composer install
+composer analyse
+```
+
+Config lives in `phpstan.neon.dist` (Larastan level 5, `app/` only).
 
 ## Ubuntu server preparation
 
