@@ -9,16 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
-/**
- * @property string|null $slug
- * @property string|null $title
- * @property string|null $body
- * @property string|null $category
- * @property string|null $attachment_path
- * @property bool $is_published
- * @property bool $is_featured
- * @property Carbon|null $pinned_until
- */
 class Notice extends Model
 {
     /** @use HasFactory<NoticeFactory> */
@@ -87,7 +77,9 @@ class Notice extends Model
 
     public function isPinned(): bool
     {
-        return $this->pinned_until !== null && $this->pinned_until->isFuture();
+        $pinnedUntil = $this->pinned_until;
+
+        return $pinnedUntil instanceof Carbon && $pinnedUntil->isFuture();
     }
 
     /**
