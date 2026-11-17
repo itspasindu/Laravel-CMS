@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * @property string|null $slug
+ * @property string|null $title
+ * @property string|null $body
+ * @property string|null $category
+ * @property string|null $attachment_path
+ * @property bool $is_published
+ * @property bool $is_featured
+ * @property \Illuminate\Support\Carbon|null $pinned_until
+ */
 class Notice extends Model
 {
     /** @use HasFactory<NoticeFactory> */
@@ -66,9 +76,12 @@ class Notice extends Model
     {
         $field ??= $this->getRouteKeyName();
 
-        return $this->where($field, $value)
+        /** @var static|null $match */
+        $match = $this->where($field, $value)
             ->orWhere($this->getKeyName(), $value)
             ->first();
+
+        return $match;
     }
 
     public function isPinned(): bool

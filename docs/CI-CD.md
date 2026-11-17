@@ -6,7 +6,7 @@ This project uses **PHP 8.3 on GitHub-hosted Ubuntu 24.04**, Node 22 for asset b
 ## Pipeline
 
 1. **Test** — Pint, PHPUnit (SQLite), release-trust/deployment recovery scripts, Vite build, Playwright smoke (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari) against `php artisan serve`.
-2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), PHPStan/Larastan (level 5), CodeQL (JavaScript + PHP), Trivy filesystem scan (HIGH/CRITICAL).
+2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), PHPStan/Larastan (level 5; CodeQL has no PHP support), CodeQL (JavaScript), Trivy filesystem scan (HIGH/CRITICAL).
 3. **Package** — On `main` only: production Composer deps, built assets, SBOM inventory, `CHECKSUMS.sha256`, `release.json` version `YYYY.MM.N.A+sha`, then RSA signature in `release-signing`.
 4. **Deploy** — CD verifies the CI run and signature, copies the archive over SSH (optional Tailscale), switches `current`, migrates, reloads PHP-FPM, restarts queues.
 5. **Verify** — Smoke checks `/health`, `/up`, `/`, `/login` from the server. Failure after switch restores `previous` (files only; migrations are not reversed).

@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * @property string|null $slug
+ * @property string|null $title
+ * @property string|null $body
+ * @property string|null $excerpt
+ * @property string|null $image_path
+ * @property \Illuminate\Support\Carbon|null $published_at
+ * @property bool $is_featured
+ */
 class News extends Model
 {
     /** @use HasFactory<NewsFactory> */
@@ -64,9 +73,12 @@ class News extends Model
     {
         $field ??= $this->getRouteKeyName();
 
-        return $this->where($field, $value)
+        /** @var static|null $match */
+        $match = $this->where($field, $value)
             ->orWhere($this->getKeyName(), $value)
             ->first();
+
+        return $match;
     }
 
     /**
