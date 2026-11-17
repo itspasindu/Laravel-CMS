@@ -64,9 +64,12 @@ class News extends Model
     {
         $field ??= $this->getRouteKeyName();
 
-        return $this->where($field, $value)
+        /** @var static|null $match */
+        $match = $this->where($field, $value)
             ->orWhere($this->getKeyName(), $value)
             ->first();
+
+        return $match;
     }
 
     /**

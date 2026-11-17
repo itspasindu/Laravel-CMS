@@ -6,6 +6,7 @@ use Database\Factories\NoticeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class Notice extends Model
@@ -66,14 +67,19 @@ class Notice extends Model
     {
         $field ??= $this->getRouteKeyName();
 
-        return $this->where($field, $value)
+        /** @var static|null $match */
+        $match = $this->where($field, $value)
             ->orWhere($this->getKeyName(), $value)
             ->first();
+
+        return $match;
     }
 
     public function isPinned(): bool
     {
-        return $this->pinned_until !== null && $this->pinned_until->isFuture();
+        $pinnedUntil = $this->pinned_until;
+
+        return $pinnedUntil instanceof Carbon && $pinnedUntil->isFuture();
     }
 
     /**

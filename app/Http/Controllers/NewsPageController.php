@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\News;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class NewsPageController extends Controller
@@ -16,7 +17,8 @@ class NewsPageController extends Controller
 
     public function show(News $news): View
     {
-        abort_unless($news->published_at !== null && $news->published_at->lte(now()), 404);
+        $publishedAt = $news->published_at;
+        abort_unless($publishedAt instanceof Carbon && $publishedAt->lte(now()), 404);
 
         return view('news.show', [
             'news' => $news,

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\News;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -43,8 +44,9 @@ class NewsController extends Controller
 
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('news', 'public');
+        $image = $request->file('image');
+        if ($image instanceof UploadedFile) {
+            $validated['image_path'] = $image->store('news', 'public');
         }
 
         unset($validated['image']);
@@ -74,12 +76,13 @@ class NewsController extends Controller
 
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        if ($image instanceof UploadedFile) {
             if ($news->image_path) {
                 Storage::disk('public')->delete($news->image_path);
             }
 
-            $validated['image_path'] = $request->file('image')->store('news', 'public');
+            $validated['image_path'] = $image->store('news', 'public');
         }
 
         unset($validated['image']);

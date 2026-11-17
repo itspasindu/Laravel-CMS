@@ -27,7 +27,11 @@ class OidcAuthController extends Controller
         $clientId = config('oidc.client_id');
         $redirectUri = config('oidc.redirect_uri');
 
-        if (! $authorizationEndpoint || ! $clientId || ! $redirectUri) {
+        if (
+            ! is_string($authorizationEndpoint) || $authorizationEndpoint === ''
+            || ! is_string($clientId) || $clientId === ''
+            || ! is_string($redirectUri) || $redirectUri === ''
+        ) {
             return response(
                 'OIDC is enabled but authorization settings are incomplete.',
                 503
