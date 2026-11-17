@@ -6,6 +6,7 @@ use Database\Factories\NoticeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
  * @property string|null $attachment_path
  * @property bool $is_published
  * @property bool $is_featured
- * @property \Illuminate\Support\Carbon|null $pinned_until
+ * @property Carbon|null $pinned_until
  */
 class Notice extends Model
 {

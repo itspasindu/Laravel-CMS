@@ -6,6 +6,7 @@ use Database\Factories\NewsFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
  * @property string|null $body
  * @property string|null $excerpt
  * @property string|null $image_path
- * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Carbon|null $published_at
  * @property bool $is_featured
  */
 class News extends Model
