@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 const ALLOWED = new Set([
   // picomatch ReDoS via single-branch extglobs — no release newer than 4.0.7 yet.
   // https://github.com/advisories/GHSA-fc5q-39xc-vjpf
-  'GHSA-fc5q-39xc-vjpf',
+  'GHSA-FC5Q-39XC-VJPF',
 ]);
 
 function advisoryId(via) {
