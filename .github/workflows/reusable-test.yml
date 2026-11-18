@@ -1,4 +1,4 @@
-name: Reusable Laravel Tests
+name: CMS Test
 
 on:
   workflow_call:

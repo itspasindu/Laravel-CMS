@@ -1,4 +1,4 @@
-name: Reusable Security
+name: CMS Scan
 
 on:
   workflow_call:

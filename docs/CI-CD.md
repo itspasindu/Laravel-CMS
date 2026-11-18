@@ -59,7 +59,7 @@ That script:
 - Adds you as a required reviewer on `staging` and `release-signing` (deployments wait for approval)
 - Keeps deployment branch policy limited to protected branches
 
-If a PR shows checks as pending forever, open **Settings → Branches → main** and select the exact check names GitHub reports (often `CI / test` and `CI / security`).
+If a PR shows checks as pending forever, open **Settings → Branches → main** and select the exact check names GitHub reports (often `CMS CI / test` and `CMS CI / security`).
 
 ### Local PHP static analysis
 
