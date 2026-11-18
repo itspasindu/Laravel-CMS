@@ -1,4 +1,4 @@
-name: Reusable Security
+name: CMS Scan
 
 on:
   workflow_call:
@@ -21,7 +21,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npm audit --audit-level=high
+      - name: npm audit (high/critical)
+        run: node scripts/npm-audit-ci.mjs
 
   secrets:
     name: Secrets (TruffleHog)

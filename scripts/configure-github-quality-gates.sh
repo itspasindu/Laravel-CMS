@@ -68,4 +68,4 @@ done
 echo
 echo "Done."
 echo "If required checks stay pending on a PR, open the branch protection UI and pick the exact"
-echo "check names shown after a green CI run (often \"CI / test\" and \"CI / security\")."
+echo "check names shown after a green CMS CI run (often \"CMS CI / test\" and \"CMS CI / security\")."

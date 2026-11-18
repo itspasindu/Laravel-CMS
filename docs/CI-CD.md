@@ -6,7 +6,7 @@ This project uses **PHP 8.3 on GitHub-hosted Ubuntu 24.04**, Node 22 for asset b
 ## Pipeline
 
 1. **Test** — Pint, PHPUnit (SQLite), release-trust/deployment recovery scripts, Vite build, Playwright smoke (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari) against `php artisan serve`.
-2. **Scan** — npm audit (high+), TruffleHog (verified secrets only), PHPStan/Larastan (level 5; CodeQL has no PHP support), CodeQL (JavaScript), Trivy filesystem scan (HIGH/CRITICAL).
+2. **Scan** — npm audit high/critical via `scripts/npm-audit-ci.mjs` (allowlists unpatched `picomatch` GHSA-fc5q-39xc-vjpf until a fixed release exists), TruffleHog (verified secrets only), PHPStan/Larastan (level 5; CodeQL has no PHP support), CodeQL (JavaScript), Trivy filesystem scan (HIGH/CRITICAL).
 3. **Package** — On `main` only: production Composer deps, built assets, SBOM inventory, `CHECKSUMS.sha256`, `release.json` version `YYYY.MM.N.A+sha`, then RSA signature in `release-signing`.
 4. **Deploy** — CD verifies the CI run and signature, copies the archive over SSH (optional Tailscale), switches `current`, migrates, reloads PHP-FPM, restarts queues.
 5. **Verify** — Smoke checks `/health`, `/up`, `/`, `/login` from the server. Failure after switch restores `previous` (files only; migrations are not reversed).
@@ -59,7 +59,7 @@ That script:
 - Adds you as a required reviewer on `staging` and `release-signing` (deployments wait for approval)
 - Keeps deployment branch policy limited to protected branches
 
-If a PR shows checks as pending forever, open **Settings → Branches → main** and select the exact check names GitHub reports (often `CI / test` and `CI / security`).
+If a PR shows checks as pending forever, open **Settings → Branches → main** and select the exact check names GitHub reports (often `CMS CI / test` and `CMS CI / security`).
 
 ### Local PHP static analysis
 

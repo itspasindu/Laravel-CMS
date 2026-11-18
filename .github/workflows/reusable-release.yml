@@ -1,4 +1,4 @@
-name: Reusable Signed Release
+name: CMS Package
 
 on:
   workflow_call:
