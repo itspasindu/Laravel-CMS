@@ -105,6 +105,14 @@ chmod -R g+rwX "$root/shared/storage" 2>/dev/null || true
 cd "$release"
 php artisan package:discover --ansi
 php artisan storage:link
+# Snapshot DB before migrate so file rollback is not stranded on schema changes.
+backup_script="$release/scripts/backup-database.sh"
+if [[ -f "$backup_script" ]]; then
+  bash "$backup_script" "$root" "$release_id"
+else
+  echo "Missing $backup_script; refusing to migrate without a backup helper." >&2
+  exit 1
+fi
 php artisan migrate --force
 php artisan view:clear || true
 php artisan config:cache

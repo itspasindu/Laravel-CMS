@@ -38,7 +38,8 @@ jobs:
         run: |
           cp .env.example .env
           touch database/database.sqlite
-          composer validate --no-check-lock
+          test -f composer.lock
+          composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
           php artisan key:generate
           php artisan migrate --force --no-interaction
