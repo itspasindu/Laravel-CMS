@@ -22,7 +22,8 @@ jobs:
       - name: Generate composer.lock
         run: |
           set -euo pipefail
-          composer update --no-install --no-interaction --no-ansi
+          # Generate metadata only; Laravel scripts require installed dependencies.
+          composer update --no-install --no-scripts --no-interaction --no-ansi
           composer validate --strict
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

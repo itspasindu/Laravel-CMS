@@ -40,7 +40,8 @@ jobs:
           touch database/database.sqlite
           if [ ! -f composer.lock ]; then
             echo "::notice::Resolving PHP dependencies because composer.lock is not committed. The generated lock file will be included in the release."
-            composer update --no-install --prefer-dist --no-interaction --no-progress
+            # Laravel's post-update scripts require vendor/autoload.php, installed below.
+            composer update --no-install --no-scripts --prefer-dist --no-interaction --no-progress
           fi
           composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
