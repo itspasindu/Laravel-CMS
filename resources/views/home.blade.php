@@ -6,7 +6,7 @@
     <section class="fade-up mb-10 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/80 p-8 shadow-sm backdrop-blur sm:p-10">
         <p class="cms-chip">Campus bulletin</p>
         <h1 class="cms-brand mt-4 text-4xl font-semibold text-[var(--cms-ink)] sm:text-5xl">
-            {{ config('app.name', 'Dummy CMS') }}
+            {{ config('app.name', 'Dummy CMS v1.07') }}
         </h1>
         <p class="mt-3 max-w-2xl text-base leading-relaxed text-[var(--cms-muted)] sm:text-lg">
             Browse featured news and pinned notices. Search the catalogue, open full articles, and manage everything from the admin area after sign-in.
