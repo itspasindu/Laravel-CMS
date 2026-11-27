@@ -22,20 +22,6 @@ cat > "$temp/bin/mysqldump" <<'MOCK'
 echo '-- mock mysqldump'
 exit 0
 MOCK
-cat > "$temp/bin/gzip" <<'MOCK'
-#!/usr/bin/env bash
-# Support `gzip -c` (stdout) and `gzip -f file` used by backup-database.sh.
-if [[ "${1:-}" == '-c' ]]; then
-  cat
-  exit 0
-fi
-if [[ "${1:-}" == '-f' && -n "${2:-}" ]]; then
-  cat "$2" > "${2}.gz"
-  rm -f "$2"
-  exit 0
-fi
-exit 0
-MOCK
 printf '#!/usr/bin/env bash\nexit 0\n' > "$temp/bin/sudo"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$temp/bin/sleep"
 chmod +x "$temp/bin/"*
@@ -45,6 +31,7 @@ if ! command -v flock >/dev/null; then
   chmod +x "$temp/bin/flock"
 fi
 export PATH="$temp/bin:$PATH"
+export PHP_FPM_SERVICE=php8.3-fpm
 for scenario in success migration health first; do
   root="$temp/$scenario"
   mkdir -p "$root/shared"
