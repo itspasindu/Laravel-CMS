@@ -38,7 +38,12 @@ jobs:
         run: |
           cp .env.example .env
           touch database/database.sqlite
-          composer validate --no-check-lock
+          if [ ! -f composer.lock ]; then
+            echo "::notice::Resolving PHP dependencies because composer.lock is not committed. The generated lock file will be included in the release."
+            # Laravel's post-update scripts require vendor/autoload.php, installed below.
+            composer update --no-install --no-scripts --prefer-dist --no-interaction --no-progress
+          fi
+          composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
           php artisan key:generate
           php artisan migrate --force --no-interaction

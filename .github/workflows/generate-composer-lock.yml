@@ -1,0 +1,32 @@
+name: Generate Composer Lock
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+      - name: Generate composer.lock
+        run: |
+          set -euo pipefail
+          # Generate metadata only; Laravel scripts require installed dependencies.
+          composer update --no-install --no-scripts --no-interaction --no-ansi
+          composer validate --strict
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: composer-lock
+          path: composer.lock
+          if-no-files-found: error
