@@ -18,16 +18,16 @@ jobs:
       SESSION_DRIVER: array
       QUEUE_CONNECTION: sync
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.3'
           extensions: mbstring, intl, pdo_sqlite, pdo_mysql, gd, zip, bcmath
           tools: composer:v2
           coverage: none
-      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
           cache: npm
@@ -55,7 +55,7 @@ jobs:
           php artisan test --log-junit test-results.xml
           node --test scripts/tests/release-trust.test.mjs
           bash scripts/tests/deployment.test.sh
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: test-results
@@ -79,7 +79,7 @@ jobs:
           done
           npx playwright test
           kill "$(cat /tmp/artisan-serve.pid)" || true
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: playwright-report
@@ -99,7 +99,7 @@ jobs:
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
           bash scripts/create-release-bundle.sh
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           name: tested-release
