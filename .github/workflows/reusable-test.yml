@@ -38,7 +38,10 @@ jobs:
         run: |
           cp .env.example .env
           touch database/database.sqlite
-          test -f composer.lock
+          if [ ! -f composer.lock ]; then
+            echo "::notice::Resolving PHP dependencies because composer.lock is not committed. The generated lock file will be included in the release."
+            composer update --no-install --prefer-dist --no-interaction --no-progress
+          fi
           composer validate --strict
           composer install --prefer-dist --no-interaction --no-progress
           php artisan key:generate

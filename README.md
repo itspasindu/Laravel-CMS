@@ -43,6 +43,8 @@ Default seeded admin (from `DatabaseSeeder`):
 
 ## Application environment commands
 
+CI creates its own temporary `.env` from `.env.example` for tests. Deployment uses your manually configured `/opt/dummy-cms/shared/.env` and does not replace it. If `composer.lock` is missing from the repository, CI generates it automatically and packages that lock file with the tested dependencies; you do not need to download or commit it to run the pipeline. A committed lock file is still used when available and makes dependency versions repeatable across runs.
+
 These commands use **Bash on Ubuntu**. Run them as the deploy account after the directory setup in [CI/CD setup](docs/CI-CD.md). The application settings live in `/opt/dummy-cms/shared/.env`; GitHub Actions settings are configured separately below.
 
 ### Create the complete staging `.env`
